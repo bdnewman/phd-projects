@@ -1,0 +1,44 @@
+// This program runs through the Cremona database, computes the rank of a curve E and  its blinked curve E_B.  It tallies the rank statistics.
+
+D := CremonaDatabase();
+index := [0..5];
+I := CartesianProduct(index,index);
+A := AssociativeArray(I);
+
+for i in I do
+A[i] :=  0;
+end for;
+
+/////////////////////////////Right below you can specify the conductor range.  The first 1000 curves account for conductors up to 254.
+
+for conductor in [255..300] do
+
+for E in EllipticCurves(D,conductor) do
+
+E_W := WeierstrassModel(E);
+J := jInvariant(E);
+rank_old := AnalyticRank(E);
+
+if J ne 1728 then
+L := aInvariants(E_W);
+Q := EllipticCurve( [ (-1/3)*(L[4])^2, (L[5])^2 + (2/27)*(L[4])^3]  );
+rank_new := AnalyticRank(Q);
+
+////////////////////////////////
+for x,y in index do
+if [rank_old, rank_new] eq [x,y] then
+A[<x,y>] := A[<x,y>]+1;
+end if;
+end for;
+////////////////////////////////
+
+end if;
+end for;
+end for;
+
+////////////////////
+for x,y in index do
+"# of curves with rank change",x,y;
+A[ <x,y> ] ;
+end for;
+///////////////////

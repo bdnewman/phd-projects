@@ -1,0 +1,85 @@
+//Magma Program:  Solving a Diophantine Equation Over a Quadratic Field
+
+
+//Suppose C is the curve defined by f=0 where f is the polynomial below.  
+//We wish to find all K-rational points on C for K = Q(i).
+
+R<x, y> := PolynomialRing(Rationals(), 2);
+f := x^4 + 2*y*x^4+2*x^3+4*x^3*y-y^4 -2*x*y^4-2*y^3-4*x*y^3;
+
+//First we factor f over Q.
+Fac := Factorization(f);  
+
+//Now we try to find the K-rational points on the irreducible factor of f of degree > 1.
+
+g := Fac[2][1];
+
+A<x,y> := AffineSpace(Rationals(),2);
+C := Curve(A, g);
+IsAbsolutelyIrreducible(C);
+
+// next 4 lines just to homogenize the polynomial g
+I := Ideal(g);
+I_hom := Homogenization(I);
+B := Basis(I_hom);
+g_hom := B[1];
+g_hom;
+
+//Now that g_hom is homogenous we can define a curve in projective space.
+P<x,y,H> := ProjectiveSpace(Rationals(),2);
+CP := Curve(P,g_hom);
+ 
+Genus(CP);  
+//The genus is 1, so it is an elliptic curve over Q if we can find one rational point!
+
+//We search for rational points on CP.  
+points := Points(CP : Bound := 10);  
+
+// There was a rational point (we chose points[1] = [0,1,0]).  Magma can now find 
+//a Weierstrass model E for C and a birational map phi:C --> E
+E, phi := EllipticCurve(CP, points[1]); 
+//E;
+//phi;
+
+K := QuadraticField(-1);
+//Now we tell Magma to view E as a curve over K.
+EK := BaseExtend(E,K);  
+Torsion := TorsionSubgroup(EK);
+Invariants(Torsion);
+RankBound(EK);
+
+//The curve has rank 0 over K and 6 torsion points, so let's find them.
+points := Points(EK: Bound := 100);
+points;
+
+//Now by hand, one can compute the points phi^(-1)(E(K)) and the points where phi 
+//is undefined.  These are the only candidates for K-rational points on C.
+
+//Here we illustrate how to compute phi^(-1)([-5 : 2 : 1]) using a Groebner basis.
+R<x,y,H,w> := PolynomialRing(K,4);
+
+g_hom := H^2*x^2 + 1/2*H*x^3 + H^2*x*y + 5/2*H*x^2*y + x^3*y + H^2*y^2 + 5/2*H*x*y^2 
++ x^2*y^2 + 1/2*H*y^3 + x*y^3;
+phi_x := 2*x*y^2*H + y^3*H + 2*x*y*H^2 + y^2*H^2 + 2*x*H^3 - 2*y*H^3 + 6*H^4;
+phi_y := 2*x*y^3 + y^4 + 2*x*y^2*H + y^3*H + 2*x*y*H^2 + y^2*H^2 + 3*y*H^3;
+phi_H := y*H^3 - H^4;
+
+// The zero set of this ideal is phi^(-1)([-5 : 2 : 1])
+I := Ideal([g_hom, phi_x - w*(points[3][1]), phi_y - w*(points[3][2]), 
+phi_H - w*(points[3][3])]);
+GroebnerBasis(I);
+
+// Note w is not 0, and two Groebner basis elements are (y+H)w =0 and (x-H)w=0.  
+Hence y = -H and x = H, and we can now easily check phi([1,-1,1]) = [-5,2,1].
+
+have := [Evaluate(phi_x, [1,-1,1,0]) , Evaluate(phi_y, [1,-1,1,0]) , 
+Evaluate(phi_H, [1,-1,1,0])];
+have;  
+// This is the same projective point as [-5,2,1], 
+//but we can also ask Magma to check it for us:
+
+// We must first tell Magma to view 'have' and 'want' as points in projective space.
+
+have := P ! have;  
+want := P ! [-5,2,1];
+want eq have; 

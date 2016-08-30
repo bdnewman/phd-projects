@@ -1,0 +1,78 @@
+//This program generates a sequence of quadratic points on X_0(37) (each lying over a rational point on an elliptic curve quotient E of X_0(37) ).  By Falting's proof of Mordell's conjecture, each quadratic field will occur at most a finite number of times.
+
+
+// Summary of algorithm:  This program runs through the points P in E(Q).  It determines if the preimage of P on X_0(37) is not defined over Q.  If so, it determines the quadratic field where the preimage is defined, computes the preimage and finds an elliptic curve with a 37-isogeny in the isomorphism class corresponding to the preimage (unless the isomorphism class corresponds to elliptic curves with j = 0 or 1728, as Magma can’t handle those cases yet).
+
+
+// The following elliptic curve E is a quotient of X0(37)
+E := EllipticCurve( [0,0,1,-1,0] );
+//E;
+//TorsionSubgroup(E);
+//RankBounds(E);
+gen := Generators(E);
+
+//"E(Q) is isomorphic to Z, with generator (0,0)";
+
+// Below n can be any nonzero integer.
+
+for n in [1..20] do
+P := gen[1];
+MultipleP := n*P;
+
+Mx := MultipleP[1];
+My := MultipleP[2];
+R<x> := PolynomialRing(Rationals());
+f := (-1-Mx)*x^2 + x - 1;      // the roots are the x-coordinates of the preimages of (Mx,My) under the quotient map X0(37) —> E
+//f;
+D := Discriminant(f);
+//D;
+square := IsSquare(D);
+//square;
+Num :=Numerator(D);
+Den := Denominator(D);
+NumSF := SquarefreeFactorization(Num);
+//NumSF;
+DenSF := SquarefreeFactorization(Den);
+//DenSF;
+DiscSF := NumSF/DenSF;
+//DiscSF;
+if square eq false then //if the preimage of (MX,MY) under the quotient map is not defined over Q
+
+"The quadratic field is Q(a), a=sqrt(D) with D =",DiscSF;
+K<a> := NumberField(x^2-DiscSF);
+S<z> := PolynomialRing(K);
+f := (-1-Mx)*z^2 + z - 1;
+
+roots := Roots(f);
+root1 := roots[1][1];
+//root2 := roots[1][2];
+y := (My + (1/2))*root1^3;
+//y;
+
+finalx := root1;
+finaly := y + (root1^3)/2;
+"The point on X_0(37) is";
+[finalx,finaly];
+end if;
+
+
+M := SmallModularCurve(37);
+M_K := BaseExtend(M,K);
+boolean, Point := IsPoint(M_K, [finalx,finaly]);
+//Point;
+
+
+j := jInvariant(Point,37);
+
+if j ne 0 then
+if j ne 1728 then
+
+"The corresponding elliptic curve with a 37-isogeny is:";
+G,E := SubgroupScheme(Point,37);
+E;
+
+end if;
+end if;
+" ";
+
+end for;

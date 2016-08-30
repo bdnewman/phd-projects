@@ -1,0 +1,63 @@
+// HERE WE FIND A GENUS 1 QUOTIENT FOR X0(35)
+
+
+
+
+P<x,y,z> := ProjectiveSpace(Rationals(),2);
+C := Curve(P,(z^5)*y^2 + (z^2)*(-x^4 - (z^2)*x^2 - (z^4)*1)*y -( -x^7 - 2*(z^1)*x^6 - (z^2)*x^5-3*(z^3)*x^4 + (z^4)*x^3 - 2*(z^5)*x^2 + (z^6)*x));
+
+//Genus(C);
+
+L := Automorphisms(C);
+map1 := L[1];
+map2 := L[2];
+map3 := L[3];
+map4 := L[4];
+
+G := AutomorphismGroup(C);
+thirdgen := G.1*G.2;
+
+
+f := map4 * map4;
+
+//f eq map1;  // allowed me to verify that all elements have order 2 so its Z_2+ Z_2
+
+//G:= AutomorphismGroup(C);
+//InvariantFactors(G);
+//A := AbelianGroup([4]);
+//IsIsomorphic(G, A);
+//#G;
+//map2;
+
+phi := map2;
+
+
+//phi := iso<C->C|[y,z,x],[x*z^3,x^4 + x^2*z^2 - y*z^3 + z^4,z^4]>;
+// we will take the quotient by phi
+
+
+G := AutomorphismGroup(C,[thirdgen]);
+CG,prj := CurveQuotient(G);
+CG;
+
+
+//Curve over Rational Field defined by
+//x[1]^2 - 13*x[1]*x[2] + 8*x[1]*x[3] + 10*x[2]*x[3] - 6*x[3]^2 + 15*x[1]*x[4] +
+//    3*x[2]*x[4] - 6*x[3]*x[4] - 6*x[4]^2,
+//x[1]^2 - 12*x[1]*x[2] + 3*x[2]^2 + 8*x[1]*x[3] + 12*x[1]*x[4]
+
+
+Genus(CG);
+
+
+// find an minimal elliptic Weierstrass model
+ptCG := prj(C![0,0,1]);
+E1, psi1 := EllipticCurve(CG,ptCG);
+E, psi := MinimalModel(E1);
+prj := Expand(prj * psi1 * psi); // get the composite map C -> E
+E;
+
+K := QuadraticField(-1);
+EK := BaseExtend(E,K);
+TorsionSubgroup(EK);
+RankBound(EK);

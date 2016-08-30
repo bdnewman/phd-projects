@@ -1,0 +1,95 @@
+
+
+// Let K denote the maximal totally-real subfield of the 13th cyclotomic field.  Our goal is to determine X_1(13)(K).  
+
+//Our first goal is to determine J_1(13)(K).  This will yield a bound on X_1(13)(K) via the Abel-Jacobi map.  Our previous work shows J_1(13) is isogenous over K to two elliptic curves which have rank 0 over K.  Hence J_1(13)(K) is rank 0 and it suffices to determine the torsion part of  J_1(13)(K).
+
+/////////////////////////  Here I am looking at how rational primes split in the deg 6 extension field K. From theory we know 6 = efg.  For example , below we see 5 splits as a product of 3 distinct primes,  5 = P_1 * P_2 * P_3, so g = 3, e=1 and HENCE f=2. So we know the quotient by any of the P_i’s will yield a finite field of order 5^2.
+
+
+F := CyclotomicField(13);
+S := Subfields(F);
+K:= S[5][1];
+
+Decomposition(K, 5); 
+
+
+/////////////////////////////////  Now below I'm computing the number of points on J_1(13) over the relevant finite fields.   The order turns out to be 19^2 over F_25 but the prime-to-5 part of the torsion injects into this group, so the prime-to-5 part must have order a divisor of 19^2.  Over F_27 we get 4*19^2 , so no factor of 5 either.
+
+
+SetVerbose("JacHypCnt",true);
+P<x> := PolynomialRing(GF(25));
+pol := x^6 + 4*x^5 + 6*x^4 + 2*x^3 + x^2 + 2*x + 1;  // y^2 = pol is our model for X_1(13)
+curve :=  HyperellipticCurve(  pol);
+
+J := Jacobian(curve);
+time #J;
+Factorization(#J);
+
+///////////////////////////////////  Below we search for points on X_1(13).  Using just two points we found, we generate 19^2 points on the J_1(13)(K) (i.e. we generate the K-torsion) and then study the properties of those points, looking for those which lie in the image of the Abel-Jacobi map.
+
+
+
+R<x> := PolynomialRing(Rationals());
+
+pol := x^6 + 4*x^5 + 6*x^4 + 2*x^3 + x^2 + 2*x + 1;  // We redefine model over rationals
+curve := HyperellipticCurve(pol); 
+curve :=BaseExtend(curve,K);
+//curve;
+
+
+
+// Below we found 12 points on X_1(13).  Are these the only ones?  We shall see!
+
+
+ptsC := Points(curve : Bound := 1);
+//ptsC;
+
+
+
+J := Jacobian(curve);
+
+ptsJ := [ ptsC[i] - ptsC[1] : i in [1..12] ];
+//ptsJ;
+
+
+// Below we observe that ptsJ[2] is not a multiple of ptsJ[5] so together they must generate the torsion subgroup C_19+C_19 (where C_19 denotes the cyclic group of order 19).
+
+//for n in [1..19] do
+//n*ptsJ[5];
+//end for;
+
+
+// Now let's generate the full K-torsion on J_1(13)
+
+torsionJ := [ a*ptsJ[2] + b*ptsJ[5] : a in [0..18], b in [0..18] ];
+
+
+//We now have determined J_1(13)(K).
+
+
+// Those points in J_1(13) that lie in the image of the Abel-Jacobi map will have image with Mumford representation of the form (a(x),b(x),d) with deg(a(x))< 2.  Below we count the number of elements in J_1(13)(K) with this property.
+
+
+count := 0;
+for point in torsionJ do
+
+if Degree(point[1]) lt 2 then
+//point;
+count := count + 1;
+end if;
+
+//if n[3] ne 2 then
+//n;
+//end if;
+
+
+end for;
+
+
+
+"The number of points on J_1(13)(K) with Mumford rep (a(x),b(x),d) and deg(a(x)) < 2 is", count;
+
+
+// The 12 points we found on X_1(13) give rise to 23 points on J_1(13) (for details, see paper "Points of Order 13 and Elliptic Curves" with Sheldon Kamienny).  Therefore, X_1(13)(K) consists of those 12 points.
+
